@@ -65,7 +65,8 @@ def send_ping(raw_socket, packet):
         raw_socket.sendto(packet, (host, 1))
     except socket.error:
         print('Error: Failed to send packet')
-        sys.exit()
+        raw_socket.close()
+        exit(1)
 
 
 def recv_ping(betterping_socket):
@@ -102,7 +103,7 @@ def recv_ping(betterping_socket):
                f' ttl={packet[8]} time={(time.time() - start_time) * 1000:.3f} ms'
 
 
-def ping_flow(betterping_socket, watchdog_thread) -> None:
+def betterping_flow(betterping_socket, watchdog_thread) -> None:
     """
     the main flow of the betterping program
     :param betterping_socket: the TCP socket that's connected to the watchdog
@@ -118,8 +119,8 @@ def ping_flow(betterping_socket, watchdog_thread) -> None:
         print('Error: Failed to create socket')
         exit(1)
 
-    status = True
     first_send = True
+    status = True
     try:
         while watchdog_thread.is_alive():
             data, packet = create_packet()
@@ -153,12 +154,15 @@ def create_tcp_socket(watchdog_thread) -> None:
     opens TCP socket, connect through it to te watchdog and starts the ping flow
     :param watchdog_thread: the watchdog thread
     """
+    ping_socket = None
     try:
         ping_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         ping_socket.connect((WATCHDOG_IP, WATCHDOG_PORT))
-        ping_flow(ping_socket, watchdog_thread)
+        betterping_flow(ping_socket, watchdog_thread)
     except socket.error:
         print(f"Socket Error {socket.error}")
+        if ping_socket is not None:
+            ping_socket.close()
         exit(1)
 
 

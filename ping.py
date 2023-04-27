@@ -63,6 +63,7 @@ def send_ping(raw_socket, packet):
         raw_socket.sendto(packet, (host, 1))
     except socket.error:
         print('Error: Failed to send packet')
+        raw_socket.close()
         exit(1)
 
 
@@ -73,7 +74,7 @@ def recv_ping(raw_socket):
     :return: string of statistics or None (if fails)
     """
     start_time = time.time()
-    packet, addr = raw_socket.recvfrom(1024)
+    packet, address = raw_socket.recvfrom(1024)
     icmp_header = packet[20:28]
 
     # reads and convert the given back packet data
@@ -82,7 +83,7 @@ def recv_ping(raw_socket):
     )
 
     if respond_type == ICMP_ECHO_REPLY:
-        return f'{len(packet[28:])} bytes from {addr[0]} icmp_seq={int(seq / 256)} ttl={packet[8]}' \
+        return f'{len(packet[28:])} bytes from {address[0]} icmp_seq={int(seq / 256)} ttl={packet[8]}' \
                f' time={(time.time() - start_time) * 1000:.3f} ms'
 
     elif respond_type == 3:
@@ -97,7 +98,7 @@ def ping_flow() -> None:
     global host
     if len(sys.argv) != 2:
         print('Usage:sudo python3 ping.py <ip>')
-        return
+        exit(1)
 
     # ip user entered
     host = sys.argv[1]

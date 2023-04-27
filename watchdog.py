@@ -19,15 +19,15 @@ def create_watchdog_tcp_socket() -> None:
         print("-----WATCHDOG IS UP-------")
 
         while True:
-            ping_socket, address = watchdog.accept()
+            betterping_socket, address = watchdog.accept()
             print(f"-----PING Program connected------")
-            status = watchdog_timer(ping_socket)
+            status = watchdog_timer(betterping_socket)
             if status == -1:
                 watchdog.close()
-                ping_socket.close()
+                betterping_socket.close()
                 # indicates got out because of watchdog
                 exit(2)
-            break
+
     except socket.error:
         print(f"Socket Error {socket.error}")
         exit(1)
